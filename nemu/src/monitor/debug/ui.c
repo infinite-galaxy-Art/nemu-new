@@ -36,6 +36,144 @@ static int cmd_q(char *args) {
 	return -1;
 }
 
+static int cmd_si(char *args) {
+	char *arg = strtok(NULL, " ");
+	int n = 1;
+	if(arg != NULL) {
+		n = atoi(arg);
+		if(n <= 0) n = 1;
+	}
+	cpu_exec(n);
+	return 0;
+}
+
+static int cmd_info(char *args) {
+	char *arg = strtok(NULL, " ");
+	if(arg == NULL) {
+		printf("info: missing subcommand\n");
+		return 0;
+	}
+
+	if(strcmp(arg, "r") == 0) {
+		printf("eax\t\t0x%08x\t%d\n", cpu.eax, cpu.eax);
+		printf("ecx\t\t0x%08x\t%d\n", cpu.ecx, cpu.ecx);
+		printf("edx\t\t0x%08x\t%d\n", cpu.edx, cpu.edx);
+		printf("ebx\t\t0x%08x\t%d\n", cpu.ebx, cpu.ebx);
+		printf("esp\t\t0x%08x\t%d\n", cpu.esp, cpu.esp);
+		printf("ebp\t\t0x%08x\t%d\n", cpu.ebp, cpu.ebp);
+		printf("esi\t\t0x%08x\t%d\n", cpu.esi, cpu.esi);
+		printf("edi\t\t0x%08x\t%d\n", cpu.edi, cpu.edi);
+		printf("eip\t\t0x%08x\n", cpu.eip);
+		printf("eflags\t\t0x%08x\n", cpu.eflags.val);
+	}
+	else if(strcmp(arg, "w") == 0) {
+		print_wp();
+	}
+	else {
+		printf("Unknown info subcommand '%s'\n", arg);
+	}
+	return 0;
+}
+
+static int cmd_x(char *args) {
+	if(args == NULL) {
+		printf("usage: x N EXPR\n");
+		return 0;
+	}
+
+	char *p = args;
+	while(*p == ' ') p ++;
+
+	char *end;
+	long n = strtol(p, &end, 10);
+	if(end == p) {
+		printf("usage: x N EXPR\n");
+		return 0;
+	}
+
+	p = end;
+	while(*p == ' ') p ++;
+	if(*p == '\0') {
+		printf("usage: x N EXPR\n");
+		return 0;
+	}
+
+	bool success;
+	uint32_t addr = expr(p, &success);
+	if(!success) {
+		printf("invalid expression\n");
+		return 0;
+	}
+
+	int i;
+	for(i = 0; i < n; i ++) {
+		printf("0x%08x:\t0x%08x\n", addr + i * 4, swaddr_read(addr + i * 4, 4));
+	}
+	return 0;
+}
+
+static int cmd_p(char *args) {
+	if(args == NULL) {
+		printf("usage: p EXPR\n");
+		return 0;
+	}
+
+	char *p = args;
+	while(*p == ' ') p ++;
+	if(*p == '\0') {
+		printf("usage: p EXPR\n");
+		return 0;
+	}
+
+	bool success;
+	uint32_t val = expr(p, &success);
+	if(!success) {
+		printf("invalid expression\n");
+		return 0;
+	}
+	printf("0x%08x\t%d\n", val, val);
+	return 0;
+}
+
+static int cmd_w(char *args) {
+	if(args == NULL) {
+		printf("usage: w EXPR\n");
+		return 0;
+	}
+
+	char *p = args;
+	while(*p == ' ') p ++;
+	if(*p == '\0') {
+		printf("usage: w EXPR\n");
+		return 0;
+	}
+
+	WP *wp = new_wp();
+	strncpy(wp->expr, p, 127);
+	wp->expr[127] = '\0';
+
+	bool success;
+	wp->old_val = expr(wp->expr, &success);
+	if(!success) {
+		free_wp(wp);
+		printf("invalid expression\n");
+		return 0;
+	}
+
+	printf("Watchpoint %d: %s = 0x%08x\n", wp->NO, wp->expr, wp->old_val);
+	return 0;
+}
+
+static int cmd_d(char *args) {
+	char *arg = strtok(NULL, " ");
+	if(arg == NULL) {
+		printf("usage: d N\n");
+		return 0;
+	}
+	delete_wp(atoi(arg));
+	return 0;
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -46,6 +184,12 @@ static struct {
 	{ "help", "Display informations about all supported commands", cmd_help },
 	{ "c", "Continue the execution of the program", cmd_c },
 	{ "q", "Exit NEMU", cmd_q },
+	{ "si", "Execute N instructions and stop (default: 1)", cmd_si },
+	{ "info", "Print the state of the program: info r / info w", cmd_info },
+	{ "x", "Examine N words (4 bytes) of memory from EXPR: x N EXPR", cmd_x },
+	{ "p", "Evaluate the expression EXPR: p EXPR", cmd_p },
+	{ "w", "Set a watchpoint on EXPR: w EXPR", cmd_w },
+	{ "d", "Delete watchpoint N: d N", cmd_d },
 
 	/* TODO: Add more commands */
 
