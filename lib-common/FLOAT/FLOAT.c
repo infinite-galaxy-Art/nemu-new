@@ -12,12 +12,15 @@ FLOAT F_mul_F(FLOAT a, FLOAT b) {
 
 FLOAT F_div_F(FLOAT a, FLOAT b) {
 	/* (a/2^16) / (b/2^16) = a/b.  The FLOAT for that real is (a/b)*2^16
-	 * = (a<<16)/b, a "64 / 32" division done by a single `idivl'. */
+	 * = (a<<16)/b, a "64 / 32" division done by a single `idivl'.
+	 * The 64-bit dividend `(int64_t)a << 16' is split into its high and
+	 * low 32-bit halves using only 32-bit shifts, avoiding `shld'. */
 	int32_t q, r;
-	int64_t num = (int64_t)a << 16;
-	asm volatile("idivl %3"
+	uint32_t lo = (uint32_t)a << 16;
+	int32_t hi = a >> 16;
+	asm volatile("idivl %4"
 		: "=a"(q), "=d"(r)
-		: "a"((uint32_t)num), "d"((uint32_t)((uint64_t)num >> 32)), "r"(b));
+		: "a"(lo), "d"(hi), "r"(b));
 	return q;
 }
 
