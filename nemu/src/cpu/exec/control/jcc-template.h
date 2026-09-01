@@ -23,15 +23,18 @@ make_helper(concat3(instr, _, SUFFIX)) {
 #endif
 
 #if DATA_BYTE == 4
+/* 2-byte opcode form: `eip' points at the second opcode byte (0x0f xx).
+ * `_2byte_esc' adds 1 to our return value, so we return the length after
+ * the second opcode byte (4 for the disp). */
 make_helper(concat3(instr, _, SUFFIX)) {
 	int32_t disp = (int32_t)instr_fetch(eip + 1, 4);
 	bool taken = (JCC_COND);
 	if (taken) {
-		cpu.eip = eip + 6 + disp;
+		cpu.eip = eip + 5 + disp;
 	}
 
 	print_asm(JCC_NAME " 0x%x", cpu.eip);
-	return (taken ? 0 : 6);
+	return (taken ? 0 : 5);
 }
 #endif
 
