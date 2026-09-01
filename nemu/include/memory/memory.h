@@ -24,6 +24,9 @@ void swaddr_write(swaddr_t, size_t, uint32_t, uint8_t sreg);
 void lnaddr_write(lnaddr_t, size_t, uint32_t);
 void hwaddr_write(hwaddr_t, size_t, uint32_t);
 uint32_t seg_translate(swaddr_t, uint8_t sreg);
+uint32_t page_translate(lnaddr_t);
+void init_tlb();
+void tlb_flush();
 
 /* cache (PA3) */
 void init_cache();

@@ -15,14 +15,6 @@ void hwaddr_write(hwaddr_t addr, size_t len, uint32_t data) {
 	cache_write(addr, len, data);
 }
 
-uint32_t lnaddr_read(lnaddr_t addr, size_t len) {
-	return hwaddr_read(addr, len);
-}
-
-void lnaddr_write(lnaddr_t addr, size_t len, uint32_t data) {
-	hwaddr_write(addr, len, data);
-}
-
 /* Segment-level address translation.  Only performed in protected mode;
  * in real mode the address is used as-is. */
 uint32_t seg_translate(swaddr_t addr, uint8_t sreg) {

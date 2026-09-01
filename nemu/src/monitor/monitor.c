@@ -93,6 +93,9 @@ void restart() {
 	/* Initialize the cache (PA3). */
 	init_cache();
 
+	/* Initialize the TLB (PA3). */
+	init_tlb();
+
 	/* Start in real mode: PE=0, PG=0.  Initialize the CS descriptor cache
 	 * so the first instruction can be fetched after entering protected mode. */
 	cpu.cr0.val = 0;

@@ -54,25 +54,37 @@ make_helper(lgdt) {
 	return len + 1;
 }
 
-/* mov r32, cr0 (0x0f 0x20) : read CR0 */
-make_helper(mov_cr0_r) {
+/* mov r32, crN (0x0f 0x20) : read CR0/CR3.  The reg field of ModR/M
+ * selects the control register (0 = CR0, 3 = CR3). */
+make_helper(mov_cr_r) {
 	ModR_M m;
 	m.val = instr_fetch(eip + 1, 1);
 	if(m.mod == 3) {
-		reg_l(m.R_M) = cpu.cr0.val;
+		if(m.reg == 0) {
+			reg_l(m.R_M) = cpu.cr0.val;
+		}
+		else if(m.reg == 3) {
+			reg_l(m.R_M) = cpu.cr3.val;
+		}
 	}
-	print_asm("movl %%cr0,%%%s", regsl[m.R_M]);
+	print_asm("movl %%cr%d,%%%s", m.reg, regsl[m.R_M]);
 	return 2;
 }
 
-/* mov cr0, r32 (0x0f 0x22) : write CR0, entering protected mode / paging */
-make_helper(mov_r_cr0) {
+/* mov crN, r32 (0x0f 0x22) : write CR0/CR3.  Writing CR3 flushes the TLB. */
+make_helper(mov_r_cr) {
 	ModR_M m;
 	m.val = instr_fetch(eip + 1, 1);
 	if(m.mod == 3) {
-		cpu.cr0.val = reg_l(m.R_M);
+		if(m.reg == 0) {
+			cpu.cr0.val = reg_l(m.R_M);
+		}
+		else if(m.reg == 3) {
+			cpu.cr3.val = reg_l(m.R_M);
+			tlb_flush();
+		}
 	}
-	print_asm("movl %%%s,%%cr0", regsl[m.R_M]);
+	print_asm("movl %%%s,%%cr%d", regsl[m.R_M], m.reg);
 	return 2;
 }
 
