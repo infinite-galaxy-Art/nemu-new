@@ -23,9 +23,14 @@ make_helper(concat3(instr, _, SUFFIX)) {
 #endif
 
 #if DATA_BYTE == 4
-/* 2-byte opcode form: `eip' points at the second opcode byte (0x0f xx).
- * `_2byte_esc' adds 1 to our return value, so we return the length after
- * the second opcode byte (4 for the disp). */
+/* 2-byte opcode form (0x0f 0x8x rel32): `eip' points at the second opcode
+ * byte.  `_2byte_esc' adds 1 to our return value, and `cpu_exec' then adds
+ * that length back onto cpu.eip.  The full instruction is 6 bytes (0x0f,
+ * 0x8x, 4-byte disp); the byte after the second opcode byte is at eip+5.
+ *
+ *  - not taken: return 5, so _2byte_esc yields 6 = full length.
+ *  - taken:     set cpu.eip = target, and return -1 so the net adjustment
+ *               from _2byte_esc + cpu_exec is 0. */
 make_helper(concat3(instr, _, SUFFIX)) {
 	int32_t disp = (int32_t)instr_fetch(eip + 1, 4);
 	bool taken = (JCC_COND);
@@ -34,7 +39,7 @@ make_helper(concat3(instr, _, SUFFIX)) {
 	}
 
 	print_asm(JCC_NAME " 0x%x", cpu.eip);
-	return (taken ? 0 : 5);
+	return (taken ? -1 : 5);
 }
 #endif
 
