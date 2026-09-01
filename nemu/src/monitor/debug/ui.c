@@ -176,6 +176,35 @@ static int cmd_d(char *args) {
 
 static int cmd_help(char *args);
 
+static int cmd_bt(char *args) {
+	swaddr_t ebp = cpu.ebp;
+	swaddr_t pc = cpu.eip;
+	int depth = 0;
+
+	/* Walk the stack frame chain via %ebp, printing the address, function
+	 * name and the first 4 arguments of every frame. */
+	while(depth < 32) {
+		const char *name = get_func_name(pc);
+		printf("#%d  %s (0x%08x)", depth, name ? name : "???", pc);
+
+		if(ebp != 0) {
+			printf("  args: 0x%x 0x%x 0x%x 0x%x",
+					swaddr_read(ebp + 8, 4),
+					swaddr_read(ebp + 12, 4),
+					swaddr_read(ebp + 16, 4),
+					swaddr_read(ebp + 20, 4));
+		}
+		printf("\n");
+
+		if(ebp == 0) break;
+
+		pc = swaddr_read(ebp + 4, 4);	/* return address (in the caller) */
+		ebp = swaddr_read(ebp, 4);		/* saved %ebp of the previous frame */
+		depth ++;
+	}
+	return 0;
+}
+
 static struct {
 	char *name;
 	char *description;
@@ -190,6 +219,7 @@ static struct {
 	{ "p", "Evaluate the expression EXPR: p EXPR", cmd_p },
 	{ "w", "Set a watchpoint on EXPR: w EXPR", cmd_w },
 	{ "d", "Delete watchpoint N: d N", cmd_d },
+	{ "bt", "Print the call stack (backtrace)", cmd_bt },
 
 	/* TODO: Add more commands */
 
