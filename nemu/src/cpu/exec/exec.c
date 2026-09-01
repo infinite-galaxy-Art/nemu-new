@@ -87,7 +87,7 @@ make_group(group6,
 	inv, inv, inv, inv)
 
 make_group(group7,
-	inv, inv, inv, inv, 
+	inv, inv, lgdt, inv,
 	inv, inv, inv, inv)
 
 
@@ -161,7 +161,7 @@ helper_fun opcode_table [256] = {
 };
 
 helper_fun _2byte_opcode_table [256] = {
-/* 0x00 */	group6, group7, lgdt, inv,
+/* 0x00 */	group6, group7, inv, inv,
 /* 0x04 */	inv, inv, inv, inv,
 /* 0x08 */	inv, inv, inv, inv,
 /* 0x0c */	inv, inv, inv, inv,
