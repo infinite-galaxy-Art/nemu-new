@@ -6,6 +6,18 @@ make_helper(nop) {
 	return 1;
 }
 
+make_helper(std) {
+	cpu.eflags.DF = 1;
+	print_asm("std");
+	return 1;
+}
+
+make_helper(cld) {
+	cpu.eflags.DF = 0;
+	print_asm("cld");
+	return 1;
+}
+
 make_helper(int3) {
 	void do_int3();
 	do_int3();
