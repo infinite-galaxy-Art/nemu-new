@@ -39,18 +39,17 @@ FLOAT f2F(float a) {
 		return 0;
 	}
 
-	/* value = (1.mant) * 2^exp = m * 2^(exp - 23), with m the 24-bit
-	 * mantissa including the implicit leading 1.  FLOAT = value * 2^16,
-	 * so the shift applied to m is (exp - 23 + 16). */
-	int64_t m = 0x800000 | mant;
-	int32_t shift = exp - 23 + 16;
-	int64_t result;
+	/* value = (1.mant) * 2^exp = sig * 2^(exp - 23), where sig is the
+	 * 24-bit significand with the implicit leading 1.  A FLOAT is
+	 * value * 2^16 = sig * 2^(exp - 7).  Everything fits in 32 bits. */
+	int32_t sig = (int32_t)(0x800000 | mant);
+	int32_t shift = exp - 7;
+	int32_t result = 0;
 
 	if (shift >= 0) {
-		result = m << shift;
-	} else {
-		int32_t rshift = -shift;
-		result = (rshift >= 24) ? 0 : (m >> rshift);
+		result = sig << shift;
+	} else if (shift > -24) {
+		result = sig >> (-shift);
 	}
 
 	return (FLOAT)(sign ? -result : result);
