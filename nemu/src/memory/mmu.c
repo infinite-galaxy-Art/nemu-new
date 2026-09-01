@@ -61,8 +61,8 @@ uint32_t page_translate(lnaddr_t addr) {
 		uint32_t pde_addr = (cpu.cr3.page_directory_base << 12) + pdir_idx * 4;
 		pde.val = hwaddr_read(pde_addr, 4);
 		Assert(pde.present,
-				"page directory entry (vaddr 0x%08x, eip=0x%08x, cr3=0x%08x, pde@0x%08x = 0x%08x) is not present",
-				addr, cpu.eip, cpu.cr3.val, pde_addr, pde.val);
+				"page directory entry (vaddr 0x%08x, cr3=0x%08x, pde@0x%08x = 0x%08x) is not present",
+				addr, cpu.cr3.val, pde_addr, pde.val);
 
 		pte.val = hwaddr_read((pde.page_frame << 12) + ptab_idx * 4, 4);
 		Assert(pte.present, "page table entry (vaddr 0x%08x) is not present", addr);
