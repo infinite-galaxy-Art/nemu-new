@@ -24,4 +24,12 @@ void swaddr_write(swaddr_t, size_t, uint32_t);
 void lnaddr_write(lnaddr_t, size_t, uint32_t);
 void hwaddr_write(hwaddr_t, size_t, uint32_t);
 
+/* cache (PA3) */
+void init_cache();
+uint32_t cache_read(hwaddr_t, size_t);
+void cache_write(hwaddr_t, size_t, uint32_t);
+extern uint64_t cache_hit;
+extern uint64_t cache_miss;
+extern uint64_t cache_cycles;
+
 #endif

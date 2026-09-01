@@ -89,4 +89,7 @@ void restart() {
 
 	/* Initialize DRAM. */
 	init_ddr3();
+
+	/* Initialize the cache (PA3). */
+	init_cache();
 }

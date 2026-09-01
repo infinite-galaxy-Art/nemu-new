@@ -69,6 +69,13 @@ static int cmd_info(char *args) {
 	else if(strcmp(arg, "w") == 0) {
 		print_wp();
 	}
+	else if(strcmp(arg, "c") == 0) {
+		extern uint64_t cache_hit, cache_miss, cache_cycles;
+		printf("cache: hit=%llu miss=%llu cycles=%llu\n",
+				(unsigned long long)cache_hit,
+				(unsigned long long)cache_miss,
+				(unsigned long long)cache_cycles);
+	}
 	else {
 		printf("Unknown info subcommand '%s'\n", arg);
 	}
