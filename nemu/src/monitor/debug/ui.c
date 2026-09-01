@@ -181,13 +181,17 @@ static int cmd_bt(char *args) {
 	swaddr_t pc = cpu.eip;
 	int depth = 0;
 
+	/* NEMU has 128MB of physical memory; a frame pointer outside this
+	 * range marks the end of a valid frame chain. */
+	const swaddr_t MEM_END = 128u << 20;
+
 	/* Walk the stack frame chain via %ebp, printing the address, function
 	 * name and the first 4 arguments of every frame. */
 	while(depth < 32) {
 		const char *name = get_func_name(pc);
 		printf("#%d  %s (0x%08x)", depth, name ? name : "???", pc);
 
-		if(ebp != 0) {
+		if(ebp >= 8 && ebp + 20 < MEM_END) {
 			printf("  args: 0x%x 0x%x 0x%x 0x%x",
 					swaddr_read(ebp + 8, 4),
 					swaddr_read(ebp + 12, 4),
@@ -196,7 +200,7 @@ static int cmd_bt(char *args) {
 		}
 		printf("\n");
 
-		if(ebp == 0) break;
+		if(ebp == 0 || ebp + 4 >= MEM_END) break;
 
 		pc = swaddr_read(ebp + 4, 4);	/* return address (in the caller) */
 		ebp = swaddr_read(ebp, 4);		/* saved %ebp of the previous frame */
