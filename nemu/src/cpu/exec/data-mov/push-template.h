@@ -10,5 +10,7 @@ static void do_execute() {
 }
 
 make_instr_helper(r)
+make_instr_helper(rm)
+make_instr_helper(i)
 
 #include "cpu/exec/template-end.h"

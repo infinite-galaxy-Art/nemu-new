@@ -11,3 +11,15 @@
 /* for instruction encoding overloading */
 
 make_helper_v(push_r)
+make_helper_v(push_rm)
+make_helper_v(push_i)
+
+/* push imm8 (sign-extended to operand size) */
+make_helper(push_si_b) {
+	int8_t imm = (int8_t)instr_fetch(eip + 1, 1);
+	cpu.esp -= 4;
+	swaddr_write(cpu.esp, 4, (int32_t)imm);
+
+	print_asm("push $0x%x", (int32_t)imm);
+	return 2;
+}
