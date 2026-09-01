@@ -81,3 +81,17 @@ void load_elf_tables(int argc, char *argv[]) {
 	fclose(fp);
 }
 
+/* Look up the address of a global variable (an OBJECT symbol) by name.
+ * Returns true and fills *addr on success, false otherwise. */
+bool get_symbol_addr(const char *name, swaddr_t *addr) {
+	int i;
+	for(i = 0; i < nr_symtab_entry; i ++) {
+		if(ELF32_ST_TYPE(symtab[i].st_info) == STT_OBJECT &&
+				strcmp(strtab + symtab[i].st_name, name) == 0) {
+			*addr = symtab[i].st_value;
+			return true;
+		}
+	}
+	return false;
+}
+

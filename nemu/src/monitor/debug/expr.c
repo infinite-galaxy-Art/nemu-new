@@ -1,4 +1,5 @@
 #include "nemu.h"
+#include "monitor/monitor.h"
 
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
@@ -8,7 +9,7 @@
 #include <stdlib.h>
 
 enum {
-	NOTYPE = 256, EQ, NEQ, AND, OR, NUM, REG, DEREF
+	NOTYPE = 256, EQ, NEQ, AND, OR, NUM, REG, VAR, DEREF
 };
 
 static struct rule {
@@ -34,7 +35,8 @@ static struct rule {
 	{"\\)", ')'},					// right parenthesis
 	{"0x[0-9a-fA-F]+", NUM},		// hexadecimal number
 	{"[0-9]+", NUM},				// decimal number
-	{"\\$[a-z]+", REG}				// register name
+	{"\\$[a-z]+", REG},				// register name
+	{"[a-zA-Z_][a-zA-Z0-9_]*", VAR}	// variable / identifier name
 };
 
 #define NR_REGEX (sizeof(rules) / sizeof(rules[0]) )
@@ -108,7 +110,7 @@ static bool make_token(char *e) {
 
 /* Whether a token can be an operand (appears on the left of a binary operator). */
 static bool is_operand(int type) {
-	return type == NUM || type == REG || type == ')';
+	return type == NUM || type == REG || type == VAR || type == ')';
 }
 
 /* Priority of a binary operator; the smaller the number, the lower the
@@ -194,6 +196,13 @@ static uint32_t token_val(int index, bool *success) {
 			if(strcmp(name, regsl[i]) == 0) return reg_l(i);
 			if(strcmp(name, regsw[i]) == 0) return reg_w(i);
 			if(strcmp(name, regsb[i]) == 0) return reg_b(i);
+		}
+	}
+	else if(tokens[index].type == VAR) {
+		/* A global variable: return its address from the symbol table. */
+		swaddr_t addr;
+		if(get_symbol_addr(tokens[index].str, &addr)) {
+			return addr;
 		}
 	}
 
