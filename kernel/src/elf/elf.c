@@ -42,6 +42,24 @@ uint32_t loader() {
 		/* Scan the program header table, load each segment into memory */
 		if(ph->p_type == PT_LOAD) {
 
+#ifdef IA32_PAGE
+			/* Allocate physical memory for this segment and set up the
+			 * user page tables (virtual -> physical mapping). */
+			uint32_t paddr = mm_malloc(ph->p_vaddr, ph->p_memsz);
+
+			/* Read the content of the segment from the ELF file into the
+			 * allocated physical memory [paddr, paddr + FileSiz). */
+			ramdisk_read((void *)paddr, ph->p_offset, ph->p_filesz);
+
+			/* Zero the remaining [paddr + FileSiz, paddr + MemSiz). */
+			memset((void *)(paddr + ph->p_filesz), 0,
+					ph->p_memsz - ph->p_filesz);
+
+			/* Record the program break for future use. */
+			extern uint32_t cur_brk, max_brk;
+			uint32_t new_brk = ph->p_vaddr + ph->p_memsz - 1;
+			if(cur_brk < new_brk) { max_brk = cur_brk = new_brk; }
+#else
 			/* Read the content of the segment from the ELF file
 			 * to the memory region [VirtAddr, VirtAddr + FileSiz)
 			 */
@@ -52,13 +70,6 @@ uint32_t loader() {
 			 */
 			memset((void *)(ph->p_vaddr + ph->p_filesz), 0,
 					ph->p_memsz - ph->p_filesz);
-
-
-#ifdef IA32_PAGE
-			/* Record the program break for future use. */
-			extern uint32_t cur_brk, max_brk;
-			uint32_t new_brk = ph->p_vaddr + ph->p_memsz - 1;
-			if(cur_brk < new_brk) { max_brk = cur_brk = new_brk; }
 #endif
 		}
 	}
