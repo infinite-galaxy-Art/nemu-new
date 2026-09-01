@@ -3,7 +3,7 @@
 #define instr pop
 
 static void do_execute() {
-	op_src->val = swaddr_read(cpu.esp, DATA_BYTE);
+	op_src->val = swaddr_read(cpu.esp, DATA_BYTE, SREG_SS);
 	cpu.esp += DATA_BYTE;
 	OPERAND_W(op_src, op_src->val);
 

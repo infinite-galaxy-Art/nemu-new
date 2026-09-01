@@ -238,7 +238,7 @@ static uint32_t eval(int p, int q, bool *success) {
 			else if(t == DEREF) {	/* dereference */
 				uint32_t addr = eval(p + 1, q, success);
 				if(!*success) return 0;
-				return swaddr_read(addr, 4);
+				return swaddr_read(addr, 4, SREG_DS);
 			}
 			*success = false;
 			return 0;

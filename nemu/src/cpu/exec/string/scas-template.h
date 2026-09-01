@@ -4,7 +4,7 @@
 
 make_helper(concat(scas_, SUFFIX)) {
 	DATA_TYPE dest = REG(R_EAX);
-	DATA_TYPE src = MEM_R(cpu.edi);;
+	DATA_TYPE src = MEM_R(cpu.edi, SREG_ES);;
 	DATA_TYPE result = dest - src;
 
 	update_eflags_pf_zf_sf((DATA_TYPE_S)result);

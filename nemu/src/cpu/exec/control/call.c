@@ -7,7 +7,7 @@ make_helper(call_si_l) {
 	swaddr_t next = eip + 5;
 
 	cpu.esp -= 4;
-	swaddr_write(cpu.esp, 4, next);
+	swaddr_write(cpu.esp, 4, next, SREG_SS);
 	cpu.eip = next + disp;
 
 	print_asm("call 0x%x", cpu.eip);
@@ -19,7 +19,7 @@ make_helper(call_rm_l) {
 	swaddr_t next = eip + 1 + len;
 
 	cpu.esp -= 4;
-	swaddr_write(cpu.esp, 4, next);
+	swaddr_write(cpu.esp, 4, next, SREG_SS);
 	cpu.eip = op_src->val;
 
 	print_asm("call *%s", op_src->str);

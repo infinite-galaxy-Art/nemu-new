@@ -1,4 +1,4 @@
-nemu_CFLAGS_EXTRA := -ggdb3 -O2
+nemu_CFLAGS_EXTRA := -ggdb3 -O2 -I$(LIB_COMMON_DIR)
 $(eval $(call make_common_rules,nemu,$(nemu_CFLAGS_EXTRA)))
 
 nemu_LDFLAGS := -lreadline

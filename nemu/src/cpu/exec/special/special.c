@@ -1,4 +1,5 @@
 #include "cpu/exec/helper.h"
+#include "cpu/decode/modrm.h"
 #include "monitor/monitor.h"
 
 make_helper(inv) {
@@ -38,5 +39,40 @@ make_helper(nemu_trap) {
 	}
 
 	return 1;
+}
+
+/* lgdt m16&32: load GDTR from the memory operand (base + 16-bit limit) */
+make_helper(lgdt) {
+	ModR_M m;
+	m.val = instr_fetch(eip + 1, 1);
+	int len = load_addr(eip + 1, &m, op_src);
+	/* the memory operand holds a 6-byte descriptor: 2-byte limit, 4-byte base */
+	cpu.gdtr.limit = swaddr_read(op_src->addr, 2, op_src->sreg) & 0xffff;
+	cpu.gdtr.base = swaddr_read(op_src->addr + 2, 4, op_src->sreg);
+
+	print_asm("lgdt 0x%x", op_src->addr);
+	return len + 1;
+}
+
+/* mov r32, cr0 (0x0f 0x20) : read CR0 */
+make_helper(mov_cr0_r) {
+	ModR_M m;
+	m.val = instr_fetch(eip + 1, 1);
+	if(m.mod == 3) {
+		reg_l(m.R_M) = cpu.cr0.val;
+	}
+	print_asm("movl %%cr0,%%%s", regsl[m.R_M]);
+	return 2;
+}
+
+/* mov cr0, r32 (0x0f 0x22) : write CR0, entering protected mode / paging */
+make_helper(mov_r_cr0) {
+	ModR_M m;
+	m.val = instr_fetch(eip + 1, 1);
+	if(m.mod == 3) {
+		cpu.cr0.val = reg_l(m.R_M);
+	}
+	print_asm("movl %%%s,%%cr0", regsl[m.R_M]);
+	return 2;
 }
 

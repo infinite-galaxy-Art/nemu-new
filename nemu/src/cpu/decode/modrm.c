@@ -109,7 +109,15 @@ int read_ModR_M(swaddr_t eip, Operand *rm, Operand *reg) {
 	}
 	else {
 		int instr_len = load_addr(eip, &m, rm);
-		rm->val = swaddr_read(rm->addr, rm->size);
+		/* memory operand: bind the segment register (SS when the base is
+		 * %esp/%ebp, DS otherwise) */
+		if(m.R_M == R_EBP || m.R_M == R_ESP) {
+			rm->sreg = SREG_SS;
+		}
+		else {
+			rm->sreg = SREG_DS;
+		}
+		rm->val = swaddr_read(rm->addr, rm->size, rm->sreg);
 		return instr_len;
 	}
 }

@@ -15,6 +15,7 @@ typedef struct {
 		int32_t simm;
 	};
 	uint32_t val;
+	uint32_t sreg;		/* segment register used to access this operand */
 	char str[OP_STR_SIZE];
 } Operand;
 

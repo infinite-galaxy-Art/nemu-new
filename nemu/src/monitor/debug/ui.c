@@ -114,7 +114,7 @@ static int cmd_x(char *args) {
 
 	int i;
 	for(i = 0; i < n; i ++) {
-		printf("0x%08x:\t0x%08x\n", addr + i * 4, swaddr_read(addr + i * 4, 4));
+		printf("0x%08x:\t0x%08x\n", addr + i * 4, swaddr_read(addr + i * 4, 4, SREG_DS));
 	}
 	return 0;
 }
@@ -200,17 +200,17 @@ static int cmd_bt(char *args) {
 
 		if(ebp >= 8 && ebp + 20 < MEM_END) {
 			printf("  args: 0x%x 0x%x 0x%x 0x%x",
-					swaddr_read(ebp + 8, 4),
-					swaddr_read(ebp + 12, 4),
-					swaddr_read(ebp + 16, 4),
-					swaddr_read(ebp + 20, 4));
+					swaddr_read(ebp + 8, 4, SREG_SS),
+					swaddr_read(ebp + 12, 4, SREG_SS),
+					swaddr_read(ebp + 16, 4, SREG_SS),
+					swaddr_read(ebp + 20, 4, SREG_SS));
 		}
 		printf("\n");
 
 		if(ebp == 0 || ebp + 4 >= MEM_END) break;
 
-		pc = swaddr_read(ebp + 4, 4);	/* return address (in the caller) */
-		ebp = swaddr_read(ebp, 4);		/* saved %ebp of the previous frame */
+		pc = swaddr_read(ebp + 4, 4, SREG_SS);	/* return address (in the caller) */
+		ebp = swaddr_read(ebp, 4, SREG_SS);		/* saved %ebp of the previous frame */
 		depth ++;
 	}
 	return 0;

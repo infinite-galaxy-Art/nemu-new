@@ -92,4 +92,11 @@ void restart() {
 
 	/* Initialize the cache (PA3). */
 	init_cache();
+
+	/* Start in real mode: PE=0, PG=0.  Initialize the CS descriptor cache
+	 * so the first instruction can be fetched after entering protected mode. */
+	cpu.cr0.val = 0;
+	cpu.cr3.val = 0;
+	cpu.sreg[SREG_CS].base = 0;
+	cpu.sreg[SREG_CS].limit = 0xffffffff;
 }
