@@ -5,24 +5,24 @@
 
 typedef int FLOAT;
 
+/* A FLOAT is a 32-bit fixed point number: the highest bit is the sign,
+ * the next 15 bits are the integer part, and the low 16 bits are the
+ * fraction part (i.e. the real value is `FLOAT / 2^16`). */
+
 static inline int F2int(FLOAT a) {
-	nemu_assert(0);
-	return 0;
+	return a >> 16;
 }
 
 static inline FLOAT int2F(int a) {
-	nemu_assert(0);
-	return 0;
+	return a << 16;
 }
 
 static inline FLOAT F_mul_int(FLOAT a, int b) {
-	nemu_assert(0);
-	return 0;
+	return a * b;
 }
 
 static inline FLOAT F_div_int(FLOAT a, int b) {
-	nemu_assert(0);
-	return 0;
+	return a / b;
 }
 
 FLOAT f2F(float);

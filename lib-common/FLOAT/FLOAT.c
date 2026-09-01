@@ -1,51 +1,63 @@
 #include "FLOAT.h"
+#include <stdint.h>
 
 FLOAT F_mul_F(FLOAT a, FLOAT b) {
-	nemu_assert(0);
-	return 0;
+	/* (a/2^16) * (b/2^16) = (a*b)/2^32.  A FLOAT result is (a*b)/2^16,
+	 * i.e. the 64-bit product shifted right by 16.  A single `imull'
+	 * computes the full 32x32 -> 64 product in edx:eax without libgcc. */
+	int32_t hi, lo;
+	asm volatile("imull %3" : "=d"(hi), "=a"(lo) : "a"(a), "r"(b));
+	return (FLOAT)(((uint32_t)hi << 16) | ((uint32_t)lo >> 16));
 }
 
 FLOAT F_div_F(FLOAT a, FLOAT b) {
-	/* Dividing two 64-bit integers needs the support of another library
-	 * `libgcc', other than newlib. It is a dirty work to port `libgcc'
-	 * to NEMU. In fact, it is unnecessary to perform a "64/64" division
-	 * here. A "64/32" division is enough.
-	 *
-	 * To perform a "64/32" division, you can use the x86 instruction
-	 * `div' or `idiv' by inline assembly. We provide a template for you
-	 * to prevent you from uncessary details.
-	 *
-	 *     asm volatile ("??? %2" : "=a"(???), "=d"(???) : "r"(???), "a"(???), "d"(???));
-	 *
-	 * If you want to use the template above, you should fill the "???"
-	 * correctly. For more information, please read the i386 manual for
-	 * division instructions, and search the Internet about "inline assembly".
-	 * It is OK not to use the template above, but you should figure
-	 * out another way to perform the division.
-	 */
-
-	nemu_assert(0);
-	return 0;
+	/* (a/2^16) / (b/2^16) = a/b.  The FLOAT for that real is (a/b)*2^16
+	 * = (a<<16)/b, a "64 / 32" division done by a single `idivl'. */
+	int32_t q, r;
+	int64_t num = (int64_t)a << 16;
+	asm volatile("idivl %3"
+		: "=a"(q), "=d"(r)
+		: "a"((uint32_t)num), "d"((uint32_t)((uint64_t)num >> 32)), "r"(b));
+	return q;
 }
 
 FLOAT f2F(float a) {
-	/* You should figure out how to convert `a' into FLOAT without
-	 * introducing x87 floating point instructions. Else you can
-	 * not run this code in NEMU before implementing x87 floating
-	 * point instructions, which is contrary to our expectation.
-	 *
-	 * Hint: The bit representation of `a' is already on the
-	 * stack. How do you retrieve it to another variable without
-	 * performing arithmetic operations on it directly?
-	 */
+	/* Decode the IEEE-754 bit pattern of `a' (already on the stack)
+	 * manually, so no x87 instruction is generated. */
+	union {
+		float f;
+		uint32_t u;
+	} u;
+	u.f = a;
 
-	nemu_assert(0);
-	return 0;
+	uint32_t bits = u.u;
+	uint32_t sign = bits >> 31;
+	int32_t exp = ((bits >> 23) & 0xff) - 127;
+	uint32_t mant = bits & 0x7fffff;
+
+	if (exp == -127 && mant == 0) {
+		return 0;
+	}
+
+	/* value = (1.mant) * 2^exp = m * 2^(exp - 23), with m the 24-bit
+	 * mantissa including the implicit leading 1.  FLOAT = value * 2^16,
+	 * so the shift applied to m is (exp - 23 + 16). */
+	int64_t m = 0x800000 | mant;
+	int32_t shift = exp - 23 + 16;
+	int64_t result;
+
+	if (shift >= 0) {
+		result = m << shift;
+	} else {
+		int32_t rshift = -shift;
+		result = (rshift >= 24) ? 0 : (m >> rshift);
+	}
+
+	return (FLOAT)(sign ? -result : result);
 }
 
 FLOAT Fabs(FLOAT a) {
-	nemu_assert(0);
-	return 0;
+	return a < 0 ? -a : a;
 }
 
 /* Functions below are already implemented */
@@ -73,4 +85,3 @@ FLOAT pow(FLOAT x, FLOAT y) {
 
 	return t;
 }
-
