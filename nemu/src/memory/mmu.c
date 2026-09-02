@@ -82,11 +82,16 @@ uint32_t page_translate(lnaddr_t addr) {
 uint32_t lnaddr_read(lnaddr_t addr, size_t len) {
 	if(cpu.cr0.paging) {
 		uint32_t offset = addr & 0xfff;
-		if(offset + len > 0x1000) {
-			/* data crosses a page boundary: not handled (KISS) */
-			Assert(0, "cross-page access at 0x%08x is not supported", addr);
+		if(offset + len <= 0x1000) {
+			return hwaddr_read(page_translate(addr), len);
 		}
-		return hwaddr_read(page_translate(addr), len);
+		/* The access crosses a page boundary.  Since the two parts may map
+		 * to non-contiguous physical pages, translate and read each part
+		 * separately.  Only len <= 4 is ever requested here. */
+		uint32_t first = 0x1000 - offset;
+		uint32_t lo = hwaddr_read(page_translate(addr), first);
+		uint32_t hi = hwaddr_read(page_translate(addr + first), len - first);
+		return lo | (hi << (first * 8));
 	}
 	return hwaddr_read(addr, len);
 }
@@ -94,10 +99,13 @@ uint32_t lnaddr_read(lnaddr_t addr, size_t len) {
 void lnaddr_write(lnaddr_t addr, size_t len, uint32_t data) {
 	if(cpu.cr0.paging) {
 		uint32_t offset = addr & 0xfff;
-		if(offset + len > 0x1000) {
-			Assert(0, "cross-page access at 0x%08x is not supported", addr);
+		if(offset + len <= 0x1000) {
+			hwaddr_write(page_translate(addr), len, data);
+			return;
 		}
-		hwaddr_write(page_translate(addr), len, data);
+		uint32_t first = 0x1000 - offset;
+		hwaddr_write(page_translate(addr), first, data);
+		hwaddr_write(page_translate(addr + first), len - first, data >> (first * 8));
 		return;
 	}
 	hwaddr_write(addr, len, data);
