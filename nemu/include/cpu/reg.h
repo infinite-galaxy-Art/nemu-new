@@ -49,6 +49,7 @@ typedef struct {
 	/* segment registers and control registers (PA3) */
 	SegReg sreg[6];		/* ES, CS, SS, DS, FS, GS */
 	GDTR gdtr;
+	GDTR idtr;			/* PA4: interrupt descriptor table register */
 	CR0 cr0;
 	CR3 cr3;
 

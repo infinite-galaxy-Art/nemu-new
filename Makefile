@@ -4,7 +4,7 @@
 
 CC := gcc
 LD := ld
-CFLAGS := -MMD -Wall -Werror -c
+CFLAGS := -std=gnu11 -MMD -Wall -Werror -c
 
 LIB_COMMON_DIR := lib-common
 LIBC_INC_DIR := $(LIB_COMMON_DIR)/uclibc/include
