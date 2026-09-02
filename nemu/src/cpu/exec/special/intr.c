@@ -28,9 +28,6 @@ void raise_intr(uint8_t NO) {
 
 	cpu.eip = offset;
 
-	fprintf(stderr, "[DEBUG raise_intr] NO=%d eax=%08x ebx=%08x ecx=%08x edx=%08x esp=%08x eip=%08x\n",
-			NO, cpu.eax, cpu.ebx, cpu.ecx, cpu.edx, cpu.esp, cpu.eip);
-
 	longjmp(jbuf, 1);
 }
 
