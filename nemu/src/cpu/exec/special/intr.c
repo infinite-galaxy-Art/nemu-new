@@ -9,6 +9,7 @@ extern jmp_buf jbuf;
  * jump to the handler.  The handler entry is reached by longjmp-ing back into
  * cpu_exec(), so that execution continues with the freshly-set cpu.eip. */
 void raise_intr(uint8_t NO) {
+	fprintf(stderr, "[raise_intr] NO=%d entry_esp=%08x entry_eip=%08x\n", NO, cpu.esp, cpu.eip);
 	/* Hardware pushes eflags, cs, eip in order (eip ends up on top). */
 	cpu.esp -= 4;
 	swaddr_write(cpu.esp, 4, cpu.eflags.val, SREG_SS);
