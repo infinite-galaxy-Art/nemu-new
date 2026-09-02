@@ -11,6 +11,17 @@ void ide_read(uint8_t *, uint32_t, uint32_t);
 void ramdisk_read(uint8_t *, uint32_t, uint32_t);
 #endif
 
+/* A unified reader: read from the disk when the device is available,
+ * otherwise fall back to the ramdisk. */
+static void
+read_from_file(void *buf, uint32_t offset, uint32_t len) {
+#ifdef HAS_DEVICE
+	ide_read((uint8_t *)buf, offset, len);
+#else
+	ramdisk_read((uint8_t *)buf, offset, len);
+#endif
+}
+
 #define STACK_SIZE (1 << 20)
 
 void create_video_mapping();
@@ -22,11 +33,7 @@ uint32_t loader() {
 
 	uint8_t buf[4096];
 
-#ifdef HAS_DEVICE
-	ide_read(buf, ELF_OFFSET_IN_DISK, 4096);
-#else
-	ramdisk_read(buf, ELF_OFFSET_IN_DISK, 4096);
-#endif
+	read_from_file(buf, ELF_OFFSET_IN_DISK, 4096);
 
 	elf = (void*)buf;
 
@@ -49,7 +56,7 @@ uint32_t loader() {
 
 			/* Read the content of the segment from the ELF file into the
 			 * allocated physical memory [paddr, paddr + FileSiz). */
-			ramdisk_read((void *)paddr, ph->p_offset, ph->p_filesz);
+			read_from_file((void *)paddr, ph->p_offset, ph->p_filesz);
 
 			/* Zero the remaining [paddr + FileSiz, paddr + MemSiz). */
 			memset((void *)(paddr + ph->p_filesz), 0,
@@ -63,7 +70,7 @@ uint32_t loader() {
 			/* Read the content of the segment from the ELF file
 			 * to the memory region [VirtAddr, VirtAddr + FileSiz)
 			 */
-			ramdisk_read((void *)ph->p_vaddr, ph->p_offset, ph->p_filesz);
+			read_from_file((void *)ph->p_vaddr, ph->p_offset, ph->p_filesz);
 
 			/* Zero the memory region
 			 * [VirtAddr + FileSiz, VirtAddr + MemSiz)
