@@ -53,6 +53,8 @@ typedef struct {
 	CR0 cr0;
 	CR3 cr3;
 
+	bool INTR;			/* PA4: whether a hardware interrupt is pending */
+
 	union {
 		struct {
 			uint32_t CF		:1;

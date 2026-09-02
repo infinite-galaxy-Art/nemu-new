@@ -107,3 +107,69 @@ make_helper(lidt) {
 	print_asm("lidt 0x%x", op_src->addr);
 	return len + 1;
 }
+
+/* in/out: port-mapped I/O, dispatched to pio_read()/pio_write(). */
+#include "device/port-io.h"
+
+make_helper(in_i_b) {
+	uint8_t port = instr_fetch(eip + 1, 1);
+	reg_b(R_AL) = pio_read(port, 1);
+	print_asm("in $0x%x,%%al", port);
+	return 2;
+}
+
+make_helper(in_i_v) {
+	uint8_t port = instr_fetch(eip + 1, 1);
+	reg_l(R_EAX) = pio_read(port, 4);
+	print_asm("in $0x%x,%%eax", port);
+	return 2;
+}
+
+make_helper(out_i_b) {
+	uint8_t port = instr_fetch(eip + 1, 1);
+	pio_write(port, 1, reg_b(R_AL));
+	print_asm("out %%al,$0x%x", port);
+	return 2;
+}
+
+make_helper(out_i_v) {
+	uint8_t port = instr_fetch(eip + 1, 1);
+	pio_write(port, 4, reg_l(R_EAX));
+	print_asm("out %%eax,$0x%x", port);
+	return 2;
+}
+
+make_helper(in_dx_b) {
+	uint16_t port = reg_w(R_DX);
+	reg_b(R_AL) = pio_read(port, 1);
+	print_asm("in (%%dx),%%al");
+	return 1;
+}
+
+make_helper(in_dx_v) {
+	uint16_t port = reg_w(R_DX);
+	reg_l(R_EAX) = pio_read(port, 4);
+	print_asm("in (%%dx),%%eax");
+	return 1;
+}
+
+make_helper(out_dx_b) {
+	uint16_t port = reg_w(R_DX);
+	pio_write(port, 1, reg_b(R_AL));
+	print_asm("out %%al,(%%dx)");
+	return 1;
+}
+
+make_helper(out_dx_v) {
+	uint16_t port = reg_w(R_DX);
+	pio_write(port, 4, reg_l(R_EAX));
+	print_asm("out %%eax,(%%dx)");
+	return 1;
+}
+
+/* hlt (0xf4): stop until a hardware interrupt arrives. */
+make_helper(hlt) {
+	print_asm("hlt");
+	while(!(cpu.INTR && cpu.eflags.IF));
+	return 1;
+}

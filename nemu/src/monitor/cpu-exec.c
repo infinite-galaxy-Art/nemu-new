@@ -84,6 +84,20 @@ void cpu_exec(volatile uint32_t n) {
 		device_update();
 #endif
 
+#ifdef HAS_DEVICE
+		/* Poll the INTR pin after executing every instruction.  If a
+		 * hardware interrupt is pending and interrupts are enabled, deliver
+		 * it through the IA-32 interrupt mechanism. */
+		if(cpu.INTR && cpu.eflags.IF) {
+			extern uint8_t i8259_query_intr();
+			extern void i8259_ack_intr();
+			extern void raise_intr(uint8_t);
+			uint8_t NO = i8259_query_intr();
+			i8259_ack_intr();
+			raise_intr(NO);
+		}
+#endif
+
 		if(nemu_state != RUNNING) { return; }
 	}
 

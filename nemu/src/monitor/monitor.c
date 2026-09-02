@@ -38,6 +38,11 @@ void init_monitor(int argc, char *argv[]) {
 	/* Initialize the watchpoint pool. */
 	init_wp_pool();
 
+#ifdef HAS_DEVICE
+	extern void init_device();
+	init_device();
+#endif
+
 	/* Display welcome message. */
 	welcome();
 }
