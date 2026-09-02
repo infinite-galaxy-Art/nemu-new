@@ -45,6 +45,8 @@ make_helper(iret) {
 	cpu.eip = swaddr_read(cpu.esp, 4, SREG_SS);
 	cpu.sreg[SREG_CS].val = swaddr_read(cpu.esp + 4, 4, SREG_SS);
 	cpu.eflags.val = swaddr_read(cpu.esp + 8, 4, SREG_SS);
+	fprintf(stderr, "[iret] esp=%08x eip=%08x cs=%08x eflags=%08x\n",
+			cpu.esp, cpu.eip, cpu.sreg[SREG_CS].val, cpu.eflags.val);
 	cpu.esp += 12;
 	print_asm("iret");
 	return 0;
