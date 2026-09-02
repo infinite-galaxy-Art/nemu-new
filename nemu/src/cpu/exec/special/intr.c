@@ -67,17 +67,19 @@ make_helper(sti) {
 	return 1;
 }
 
-/* pusha (0x60): push eax, ecx, edx, ebx, original esp, ebp, esi, edi. */
+/* pusha (0x60): push eax, ecx, edx, ebx, original esp, ebp, esi, edi.
+ * The first register pushed (eax) ends up at the highest address, and the
+ * last one (edi) ends up on top of the stack. */
 make_helper(pusha) {
 	uint32_t tmp = cpu.esp;
-	swaddr_write(tmp - 4,  4, cpu.edi, SREG_SS);
-	swaddr_write(tmp - 8,  4, cpu.esi, SREG_SS);
-	swaddr_write(tmp - 12, 4, cpu.ebp, SREG_SS);
-	swaddr_write(tmp - 16, 4, tmp,    SREG_SS);
-	swaddr_write(tmp - 20, 4, cpu.ebx, SREG_SS);
-	swaddr_write(tmp - 24, 4, cpu.edx, SREG_SS);
-	swaddr_write(tmp - 28, 4, cpu.ecx, SREG_SS);
-	swaddr_write(tmp - 32, 4, cpu.eax, SREG_SS);
+	swaddr_write(tmp - 4,  4, cpu.eax, SREG_SS);
+	swaddr_write(tmp - 8,  4, cpu.ecx, SREG_SS);
+	swaddr_write(tmp - 12, 4, cpu.edx, SREG_SS);
+	swaddr_write(tmp - 16, 4, cpu.ebx, SREG_SS);
+	swaddr_write(tmp - 20, 4, tmp,    SREG_SS);
+	swaddr_write(tmp - 24, 4, cpu.ebp, SREG_SS);
+	swaddr_write(tmp - 28, 4, cpu.esi, SREG_SS);
+	swaddr_write(tmp - 32, 4, cpu.edi, SREG_SS);
 	cpu.esp = tmp - 32;
 	print_asm("pusha");
 	return 1;
