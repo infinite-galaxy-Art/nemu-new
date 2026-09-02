@@ -14,6 +14,22 @@ static void sys_ioctl(TrapFrame *tf) {
 	tf->eax = fs_ioctl(tf->ebx, tf->ecx, (void *)tf->edx);
 }
 
+static void sys_write(TrapFrame *tf) {
+	int fd = tf->ebx;
+	char *buf = (char *)tf->ecx;
+	int len = tf->edx;
+
+	if(fd == 1 || fd == 2) {
+		/* Output `len' bytes starting from `buf' through the NEMU trap
+		 * (eax = 2), which the emulator interprets as "print the string". */
+		asm volatile("movl %0, %%eax; movl %1, %%ecx; movl %2, %%edx; .byte 0xd6"
+				: : "i"(2), "r"(buf), "r"(len) : "eax", "ecx", "edx");
+	}
+
+	/* write() returns the number of bytes written. */
+	tf->eax = len;
+}
+
 void do_syscall(TrapFrame *tf) {
 	switch(tf->eax) {
 		/* The `add_irq_handle' system call is artificial. We use it to
@@ -21,7 +37,7 @@ void do_syscall(TrapFrame *tf) {
 		 * very dangerous in a real operating system. Therefore such a
 		 * system call never exists in GNU/Linux.
 		 */
-		case 0: 
+		case 0:
 			cli();
 			add_irq_handle(tf->ebx, (void*)tf->ecx);
 			sti();
@@ -29,6 +45,7 @@ void do_syscall(TrapFrame *tf) {
 
 		case SYS_brk: sys_brk(tf); break;
 		case SYS_ioctl: sys_ioctl(tf); break;
+		case SYS_write: sys_write(tf); break;
 
 		/* TODO: Add more system calls. */
 
