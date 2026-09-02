@@ -20,10 +20,12 @@ static void sys_write(TrapFrame *tf) {
 	int len = tf->edx;
 
 	if(fd == 1 || fd == 2) {
-		/* Output `len' bytes starting from `buf' through the NEMU trap
-		 * (eax = 2), which the emulator interprets as "print the string". */
-		asm volatile("movl %0, %%eax; movl %1, %%ecx; movl %2, %%edx; .byte 0xd6"
-				: : "i"(2), "r"(buf), "r"(len) : "eax", "ecx", "edx");
+		/* Output `len' bytes starting from `buf' through the serial port. */
+		extern void serial_printc(char);
+		int i;
+		for(i = 0; i < len; i ++) {
+			serial_printc(buf[i]);
+		}
 	}
 
 	/* write() returns the number of bytes written. */
